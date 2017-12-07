@@ -12,6 +12,277 @@ echo'
 
 	<form action="https://test3.testserver.se/index.php/ga/print_results" method="post">
 	
+	<div class="row">
+		<div class="col-lg-12">
+			<div class="card" id="eCommerce-group-card">
+				<div class="card-body">	
+					<div class="row">
+						<div class="col-lg-12">
+							<h4 class="card-title">E-handel</h4>
+						</div>
+					</div>
+					
+					<div class="row">
+
+						<div class="col-lg-12">
+							<div class="card" id="e-overview">
+								<div class="card-body">	
+									<h4 class="card-title">Översikt totalt denna månad (rutor)</h4>
+									<table class="table table-sm">
+									  <thead>
+									    <tr>
+									      <th scope="col">Transaktioner</th>
+									      <th scope="col">Intäkter</th>
+									      <th scope="col">Medelvärde/köp</th>
+									      <th scope="col">Sålda artiklar</th>
+									      <th scope="col">Handlande besökare</th>
+									    </tr>
+									  </thead>
+									  <tbody> ';	  	
+									  		echo '
+													<tr> ';
+													foreach($e_overview as $key => $value){
+														echo '
+															<td>'.number_format($value['transactions'],0,',',' ').'</td>
+											      	<td>'.number_format($value['revenue'],1,',',' ').' kr</td>
+											      	<td>'.number_format($value['avgRevenue'],1,',',' ').' kr</td>
+											      	<td>'.number_format($value['quantity'],0,',',' ').'</td>
+											      	<td>'.number_format($value['converts'],2,',',' ').' %</td>
+											      ';
+											    };
+											    echo '
+											    </tr>
+									  </tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					
+					</div>
+					<div class="row">
+
+						<div class="col-lg-5">
+							<div class="card" id="e-channels-transactions">
+								<div class="card-body">	
+									<h4 class="card-title">Intäkter/Kanal (tabell)</h4>
+									<table class="table table-sm">
+									  <thead>
+									    <tr>
+									      <th scope="col">Kanal</th>
+									      <th scope="col">Intäkt</th>
+									    </tr>
+									  </thead>
+									  <tbody> ';	  
+									  	$totalChannelRevenue = 0;
+											foreach($e_channels as $key){
+												$totalChannelRevenue += $key['revenue'];
+											}	
+									  	foreach($e_channels as $key){
+									  		echo '
+													<tr>
+														<td>'.$key['source'].'</td>
+										      	<td>'.number_format($key['revenue'],0,',',' ').' kr</td>	
+											    </tr>
+									  		';
+									  	};
+									    echo '
+									    <tr>
+									      <td>Totalt</td>
+									      <td>'.number_format($totalChannelRevenue,0,',',' ').' kr</td>
+									    </tr>
+									  </tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-lg-7">
+							<div class="card" id="e-channels-pie">
+								<div class="card-body">	
+									<h4 class="card-title">Transaktioner/kanal (Doughnut chart)</h4>
+									<table class="table table-sm">
+									  <thead>
+									    <tr>
+									      <th scope="col">Kanal</th>
+									      <th scope="col">Antal</th>
+									    </tr>
+									  </thead>
+									  <tbody> ';	  
+									  	foreach($e_channels as $key){
+									  		echo '
+													<tr>
+														<td>'.$key['source'].'</td>
+											      <td>'.$key['transactions'].'</td>
+											    </tr>
+									  		';
+									  	};
+									    echo '
+									  </tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					
+					</div>
+					<div class="row">
+
+						<div class="col-lg-5">
+							<div class="card" id="e-devices-table">
+								<div class="card-body">	
+									<h4 class="card-title">Intäkter/Enhet (tabell)</h4>
+									<table class="table table-sm">
+									  <thead>
+									    <tr>
+									      <th scope="col">Enhet</th>
+									      <th scope="col">Intäkt</th>
+									    </tr>
+									  </thead>
+									  <tbody> ';	  
+									  	$totalDevicesRevenue = 0;
+											foreach($e_devices as $key){
+												$totalDevicesRevenue += $key['revenue'];
+											}	
+									  	foreach($e_devices as $key){
+									  	echo '
+												<tr>
+													<td>'.$key['device'].'</td>
+										     	<td>'.number_format($key['revenue'],0,',',' ').' kr</td>
+											  </tr>
+									  	';
+									    };
+									    echo '   
+									    <tr>
+									      <td>Totalt</td>
+									      <td>'.number_format($totalDevicesRevenue,0,',',' ').' kr</td>
+									    </tr>
+									  </tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+
+						<div class="col-lg-7">
+							<div class="card" id="e-devices-pie">
+								<div class="card-body">	
+									<h4 class="card-title">Transaktioner/Enhet (Doughnut chart)</h4>
+									<table class="table table-sm">
+									  <thead>
+									    <tr>
+									      <th scope="col">Enhet</th>
+									      <th scope="col">Antal</th>
+									    </tr>
+									  </thead>
+									  <tbody> ';	  
+									  	foreach($e_devices as $key){
+									  	echo '
+								  			<tr>
+													<td>'.$key['device'].'</td>
+										     	<td>'.$key['transactions'].'</td>
+											  </tr>
+									  	';
+									    };
+									    echo '   
+									  </tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					
+					</div>
+					<div class="row">
+										
+						<div class="col-lg-5">
+							<div class="card" id="e-cities-table">
+							  <div class="card-body">	
+									<h4 class="card-title">Intäkter/Ort (tabell)</h4>
+									<table class="table table-sm">
+									  <thead>
+									    <tr>
+									      <th scope="col">Stad</th>
+									      <th scope="col">Intäkt</th>
+									      <th scope="col">Välj 3</th>
+									    </tr>
+									  </thead>
+									  <tbody> ';	  
+									  	$totalCitiesRevenue = 0;
+												foreach($e_cities as $key){
+													$totalCitiesRevenue += $key['revenue'];
+												}
+									  	foreach($e_cities as $key => $value){
+									  	echo '
+												<tr>
+														<td>'.$value['city'].'</td>
+										      	<td>'.number_format($value['revenue'],0,',',' ').' kr</td>
+										      	<td>
+										      		<label class="custom-control custom-checkbox mb-2 mr-sm-2 mb-sm-0">
+												        <input type="checkbox" class="custom-control-input" name="e-cities-table'.$key.'" value="'.str_replace('"', "'", json_encode($value)).'">
+												        <span class="custom-control-indicator"></span>
+												        <span class="custom-control-description">Lägg till</span>
+												      </label>
+										      	</td>
+													
+											    </tr>
+									  		';
+									  	};
+									    echo '
+									  </tbody>
+									</table>
+								</div>
+						  </div>
+						</div> 
+
+						<div class="col-lg-7">
+							<div class="card" id="e-cities-pie">
+								<div class="card-body">	
+									<h4 class="card-title">Trasaktioner/Ort (Doughnut chart)</h4>
+									<table class="table table-sm">
+									  <thead>
+									    <tr>
+									      <th scope="col">Ort</th>
+									      <th scope="col">Antal</th>
+									    </tr>
+									  </thead>
+									  <tbody> ';	  
+									  	foreach($e_cities as $key => $value){
+									  	  echo '
+												<tr>
+													<td>'.$value['city'].'</td>
+										     	<td>'.$value['transactions'].'</td>
+										    </tr>
+									  		';
+									  	};
+									    echo '
+									  </tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+
+					</div>
+					<div class="row">
+						';
+						$e_devAndChannels = [
+							'e_overview' => $e_overview,
+							'e_devices' => $e_devices,
+							'e_channels' => $e_channels,
+						];
+						$e_devAndChannelsArray = json_encode($e_devAndChannels);
+						$e_devAndChannelsArray = str_replace('"', "'", $e_devAndChannelsArray);
+						echo '
+						<div class="col-12">
+							<label class="custom-control custom-checkbox mb-2 mr-sm-2 mb-sm-0">
+							  <input type="checkbox" class="custom-control-input" name="eCommerce-card" value="'.$e_devAndChannelsArray.'">
+							  <span class="custom-control-indicator"></span>
+							  <span class="custom-control-description">Lägg till</span>
+						  </label>
+				    </div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	</div>
+	
 	<div class="row">	
 		<div class="col-12">
 			<div class="card" id="overview-month">
@@ -31,17 +302,10 @@ echo'
 								foreach($thisMonth as $key){
 									$totalMonth += $key['sessions'];
 								}	
-						    $bothMonths = [];
-						    $thisYear = [];
-						    $lastYear = [];
-								array_push($thisYear, $thisMonth);
-								array_push($lastYear, $lastYearMonth);
-								foreach ($thisYear as $key) {
-									array_push($bothMonths, ['thisYear' => $key]);
-								}
-								foreach ($lastYear as $key) {
-									array_push($bothMonths, ['lastYear' => $key]);
-								}
+						    $bothMonths = [
+						    	'thisYear' => $thisMonth,
+						    	'lastYear' => $lastYearMonth,
+						    ];
 						  	$bothMonths_table = json_encode($bothMonths);
 					  	  $bothMonths_table = str_replace('"', "'", $bothMonths_table);
 						  /*	foreach($thisMonth as $key){   		
@@ -133,13 +397,9 @@ echo'
 					  	$users_pie = str_replace('"', "'", $users_pie);
 					  	foreach($userType as $key){
 					  		echo '
-								<tr>';
-								if(isset($key['userType'])){
-									echo '
-										<td>'.$key['userType'].'</td>
-							     	<td>'.round($key['quantity']/$totalUsers * 100, 2).' %</td>
-									';
-								}; echo '
+								<tr>
+									<td>'.$key['userType'].'</td>
+						     	<td>'.round($key['quantity']/$totalUsers * 100, 2).' %</td>
 							  </tr>
 					  		';
 					  	};
@@ -173,23 +433,18 @@ echo'
 					  </thead>
 					  <tbody>';	  
 					  	foreach($pagePaths as $key => $value){
-					  	echo '
-								<tr>';
-								if(isset($value['pagePath'])){		
-									echo '
-										<td>'.$value['pagePath'].'</td>
-							     	<td>'.$value['views'].'</td>
-							     	<td>
-						      		<label class="custom-control custom-checkbox mb-2 mr-sm-2 mb-sm-0">
-								        <input type="checkbox" class="custom-control-input" name="pagePath-table'.$key.'" value="'.str_replace('"', "'", json_encode($value)).'">
-								        <span class="custom-control-indicator"></span>
-								        <span class="custom-control-description">Lägg till</span>
-								      </label>
-						      	</td>
-									';
-								}; 
-								echo '
-							    </tr>
+					  		echo '
+								<tr>
+									<td>'.$value['pagePath'].'</td>
+							    <td>'.$value['views'].'</td>
+							    <td>
+						      	<label class="custom-control custom-checkbox mb-2 mr-sm-2 mb-sm-0">
+								      <input type="checkbox" class="custom-control-input" name="pagePath-table'.$key.'" value="'.str_replace('"', "'", json_encode($value)).'">
+								      <span class="custom-control-indicator"></span>
+								      <span class="custom-control-description">Lägg till</span>
+								    </label>
+						      </td>
+							  </tr>
 					  		';
 					  	};
 					    echo '
@@ -215,28 +470,19 @@ echo'
 					    </tr>
 					  </thead>
 					  <tbody> ';	  
-					  	$totalCities = 0;
-								foreach($cities as $key){
-									$totalCities += $key['views'];
-								}
 					  	foreach($cities as $key => $value){
 					  	echo '
-								<tr>';
-								if(isset($value['city'])){
-									echo '
-										<td>'.$value['city'].'</td>
-						      	<td>'.round($value['views']/$totalCities * 100, 2).' %</td>
-						      	<td>
-						      		<label class="custom-control custom-checkbox mb-2 mr-sm-2 mb-sm-0">
-								        <input type="checkbox" class="custom-control-input" name="cities-table'.$key.'" value="'.str_replace('"', "'", json_encode($value)).'">
-								        <span class="custom-control-indicator"></span>
-								        <span class="custom-control-description">Lägg till</span>
-								      </label>
-						      	</td>
-									';
-								}; 
-								echo '
-							    </tr>
+								<tr>										
+								  <td>'.$value['city'].'</td>
+						      <td>'.round($value['views'], 2).' %</td>
+						      <td>
+						      	<label class="custom-control custom-checkbox mb-2 mr-sm-2 mb-sm-0">
+								      <input type="checkbox" class="custom-control-input" name="cities-table'.$key.'" value="'.str_replace('"', "'", json_encode($value)).'">
+								      <span class="custom-control-indicator"></span>
+								      <span class="custom-control-description">Lägg till</span>
+								    </label>
+						      </td>
+							  </tr>
 					  		';
 					  	};
 					    echo '
@@ -266,14 +512,9 @@ echo'
 					  	$devices_table = str_replace('"', "'", $devices_table);
 					  	foreach($devices as $key){
 					  	echo '
-								<tr>';
-								if(isset($key['device'])){
-									echo '
-										<td>'.$key['device'].'</td>
-							     	<td>'.round($key['usage']/$totalDevices * 100, 2).' %</td>
-									';
-								}; 
-							echo '
+								<tr>
+									<td>'.$key['device'].'</td>
+						     	<td>'.round($key['usage']/$totalDevices * 100, 2).' %</td>
 							  </tr>
 					  	';
 					    };
@@ -316,13 +557,9 @@ echo'
 					  	$channels_pie = str_replace('"', "'", $channels_pie);
 					  	foreach($channels as $key){
 					  		echo '
-									<tr>';
-									if(isset($key['source'])){
-										echo '
-											<td>'.$key['source'].'</td>
-							      	<td>'.round($key['sessions']/$totalChannels * 100, 2).' %</td>
-										';
-									}; echo '
+									<tr>
+										<td>'.$key['source'].'</td>
+		  			      	<td>'.round($key['sessions']/$totalChannels * 100, 2).' %</td>
 							    </tr>
 					  		';
 					  	};
@@ -354,18 +591,13 @@ echo'
 					    </tr>
 					  </thead>
 					  <tbody> ';	  
-					  	
 					  	$channels_table = json_encode($channels);
 					  	$channels_table = str_replace('"', "'", $channels_table);
 					  	foreach($channels as $key){
 					  		echo '
-									<tr>';
-									if(isset($key['source'])){
-										echo '
-											<td>'.$key['source'].'</td>
-							      	<td>'.$key['sessions'].'</td>
-										';
-									}; echo '
+									<tr>
+										<td>'.$key['source'].'</td>
+						      	<td>'.$key['sessions'].'</td>
 							    </tr>
 					  		';
 					  	};
@@ -407,17 +639,10 @@ echo'
 								foreach($allMonthsThisYear as $key){
 									$totalThisYear += $key['sessions'];
 								}	
-						    $bothYears = [];
-						    $thisYear = [];
-						    $lastYear = [];
-								array_push($thisYear, $allMonthsThisYear);
-								array_push($lastYear, $allMonthsLastYear);
-								foreach ($thisYear as $key) {
-									array_push($bothYears, ['thisYear' => $key]);
-								}
-								foreach ($lastYear as $key) {
-									array_push($bothYears, ['lastYear' => $key]);
-								}
+								$bothYears = [
+						    	'thisYear' => $allMonthsThisYear,
+						    	'lastYear' => $allMonthsLastYear,
+						    ];
 						  	$bothYears_table = json_encode($bothYears);
 					  	  $bothYears_table = str_replace('"', "'", $bothYears_table);
 						  /*	foreach($allMonthsThisYear as $key){
@@ -603,6 +828,7 @@ echo'
 							</div>
 						</div>
 					</div>
+
 					<div class="row">
 					<div class="col-12">
 						<label class="custom-control custom-checkbox mb-2 mr-sm-2 mb-sm-0">

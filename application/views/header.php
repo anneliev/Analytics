@@ -41,6 +41,15 @@
 			border: 3px outset #d3d3d3;
 			text-align: center;
 		}
+		.e_square{
+			margin: 0px 20px 0px 20px; 
+			padding: 30px; 
+			background-color: #01c0c8;
+			color: #fff;
+			border-radius: 30px;
+			border: 3px outset #d3d3d3;
+			text-align: center;
+		}
 		.square-input{
 			margin: 35px 50px 35px 50px; 
 			padding: 40px; 
@@ -52,6 +61,9 @@
 		}
 		.star-list{
 			font-size: 2em;
+		}
+		.e-cards{
+			padding-bottom: 260px;
 		}
 		#overview-month, #overview-year, #adwords-chart{
 			padding-right:30px;

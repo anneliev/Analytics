@@ -16,6 +16,294 @@ echo'
 		<br />
 		
 ';
+	if(!empty($e_commerce)){
+		echo '
+			<div class="row">
+				<div class="col-lg-12">
+					<h1>E-handel</h1>
+				</div>		
+			</div>
+			';
+			foreach($e_commerce['e_overview'] as $key){
+			echo '
+			<div class="row">
+			
+		  	<div class="col-lg-12 col-md-12">					
+					<div class="row justify-content-center">
+					  <div class="col-2 e_square">
+					    <h2>Transaktioner</h2>
+					    <h2 class="invisible" style="margin-bottom: 0">"</h2>
+					    <h1 class="font-weight-bold">'.$key['transactions'].'</h1>
+					  </div>
+					  <div class="col-2 e_square">
+					    <h2>Intäkter</h2>
+					    <h2 class="invisible" style="margin-bottom: 0">"</h2>
+					    <h1 class="font-weight-bold">'.number_format($key['revenue'],1,',',' ').' kr</h1>
+					  </div>
+				  
+		  	    <div class="col-2 e_square">
+				      <h2>Medelvärde/köp</h2>
+				      <h2 class="invisible" style="margin-bottom: 0">"</h2>
+				      <h1 class="font-weight-bold">'.number_format($key['avgRevenue'],1,',',' ').' kr</h1>
+				    </div>
+				    <div class="col-2 e_square">
+				      <h2>Sålda artiklar</h2>
+				      <h2 class="invisible" style="margin-bottom: 0">"</h2>
+				      <h1 class="font-weight-bold">'.$key['quantity'].'</h1>
+				    </div>
+				    <div class="col-2 e_square">
+				      <h2>Handlande besökare</h2>
+				      <h1 class="font-weight-bold">'.round($key['converts'], 2).'%</h1>
+				    </div>
+				  </div>
+				</div>
+
+		  </div> ';
+		};
+		echo '
+
+		<div class="row">
+	
+			<div class="col-12 ">
+				<h1>Kanaler</h1>
+			</div>
+		
+			<div class="col-lg-5 col-md-6">
+				<div class="card cust-card small-card">
+					<div class="card-body">	
+						<h1 class="card-title text-center">Intäkter</h1>
+						<table class="table table-striped table_print">
+						  <thead>
+						    <tr>
+						      <th scope="col">Sökväg</th>
+						      <th scope="col" class="text-right">Intäkt</th>
+						    </tr>
+						  </thead>
+						  <tbody>';	 
+						  $totalEChannelsRevenue = 0;
+							foreach($e_commerce['e_channels'] as $key){
+								$totalEChannelsRevenue += $key['revenue'];
+							}	
+						  foreach($e_commerce['e_channels'] as $key => $value){
+						  	echo '
+									<tr >';
+									if(isset($e_commerce['e_channels'])){
+										echo '
+											<td>'.$value['source'].'</td>
+							      	<td class="text-right">'.number_format($value['revenue'],0,',',' ').' kr</td>
+										';
+										}; echo '
+								    </tr>
+						  		';
+						  	};
+						    echo '
+						    <tr>
+						      <td class="font-weight-bold">Totalt</td>
+						      <td class="font-weight-bold text-right"">'.number_format($totalEChannelsRevenue,0,',',' ').' kr</td>
+							  </tr>
+						  </tbody>
+						</table>
+					</div>
+				</div>
+		  </div>
+
+		  <div class="col-lg-7 col-md-6">
+				<div class="card cust-card small-card">
+					<div class="card-body">
+						<h1 class="card-title text-center">Transaktioner</h1>
+						<hr>
+						<div class="row">
+							<div class="col-10">
+								<canvas id="e-channels-doughnut"></canvas>
+							</div>
+							<div class="col-2">
+								<ul style="list-style: none">	
+								';
+								$totalEChannelsTrans = 0;
+								foreach($e_commerce['e_channels'] as $key){
+									$totalEChannelsTrans += $key['transactions'];
+								}	
+								foreach($e_commerce['e_channels'] as $key){
+									echo '
+										<li>
+											<h1 class="text-right font-weight-bold">'.round($key['transactions']/$totalEChannelsTrans * 100).' % </h1>
+										</li>	
+									';
+									}
+								echo '
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+		<div class="row">
+	
+			<div class="col-12 ">
+				<h1>Enheter</h1>
+			</div>
+		
+			<div class="col-lg-5 col-md-6">
+				<div class="card cust-card small-card">
+					<div class="card-body">	
+						<h1 class="card-title text-center">Intäkter</h1>
+						<table class="table table-striped table_print">
+						  <thead>
+						    <tr>
+						      <th scope="col">Enhet</th>
+						      <th scope="col" class="text-right">Intäkt</th>
+						    </tr>
+						  </thead>
+						  <tbody>';	 
+						  $totalEDevicesRevenue = 0;
+							foreach($e_commerce['e_devices'] as $key){
+								$totalEDevicesRevenue += $key['revenue'];
+							}	
+						  foreach($e_commerce['e_devices'] as $key => $value){
+						  	echo '
+									<tr >';
+									if(isset($e_commerce['e_devices'])){
+										echo '
+											<td>'.$value['device'].'</td>
+							      	<td class="text-right">'.number_format($value['revenue'],0,',',' ').' kr</td>
+										';
+										}; echo '
+								    </tr>
+						  		';
+						  	};
+						    echo '
+						    <tr>
+						      <td class="font-weight-bold">Totalt</td>
+						      <td class="font-weight-bold text-right"">'.number_format($totalEDevicesRevenue,0,',',' ').' kr</td>
+							  </tr>
+						  </tbody>
+						</table>
+					</div>
+				</div>
+		  </div>
+
+		  <div class="col-lg-7 col-md-6">
+				<div class="card cust-card small-card">
+					<div class="card-body">
+						<h1 class="card-title text-center">Transaktioner</h1>
+						<hr>
+						<div class="row">
+							<div class="col-10">
+								<canvas id="e-devices-doughnut"></canvas>
+							</div>
+							<div class="col-2">
+								<ul style="list-style: none">	
+								';
+								$totalEDevicesTrans = 0;
+								foreach($e_commerce['e_devices'] as $key){
+									$totalEDevicesTrans += $key['transactions'];
+								}	
+								foreach($e_commerce['e_devices'] as $key){
+									echo '
+										<li>
+											<h1 class="text-right font-weight-bold">'.round($key['transactions']/$totalEDevicesTrans * 100).' % </h1>
+										</li>	
+									';
+									}
+								echo '
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+		';
+		if(isset($e_cities)){
+			echo '
+		
+		<div class="row  e-cards">
+	
+			<div class="col-12 ">
+				<h1>Topp '.sizeof($e_cities).' orter</h1>
+			</div>
+		
+			<div class="col-lg-5 col-md-6">
+				<div class="card cust-card small-card">
+					<div class="card-body">	
+						<h1 class="card-title text-center">Intäkter</h1>
+						<table class="table table-striped table_print">
+						  <thead>
+						    <tr>
+						      <th scope="col">Ort</th>
+						      <th scope="col" class="text-right">Intäkt</th>
+						    </tr>
+						  </thead>
+						  <tbody>';	 
+						  $totalECitiesRevenue = 0;
+							foreach($e_cities as $key){
+								$totalECitiesRevenue += $key['revenue'];
+							}	
+						  foreach($e_cities as $key => $value){
+						  	echo '
+									<tr >';
+									if(isset($e_cities)){
+										echo '
+											<td>'.$value['city'].'</td>
+							      	<td class="text-right">'.number_format($value['revenue'],0,',',' ').' kr</td>
+										';
+										}; echo '
+								    </tr>
+						  		';
+						  	};
+						    echo '
+						    <tr>
+						      <td class="font-weight-bold">Totalt</td>
+						      <td class="font-weight-bold text-right"">'.number_format($totalECitiesRevenue,0,',',' ').' kr</td>
+							  </tr>
+						  </tbody>
+						</table>
+					</div>
+				</div>
+		  </div>
+
+		  <div class="col-lg-7 col-md-6">
+				<div class="card cust-card small-card">
+					<div class="card-body">
+						<h1 class="card-title text-center">Transaktioner</h1>
+						<hr>
+						<div class="row">
+							<div class="col-10">
+								<canvas id="e-cities-doughnut"></canvas>
+							</div>
+							<div class="col-2">
+								<ul style="list-style: none">	
+								';
+								$totalECitiesTrans = 0;
+								foreach($e_cities as $key){
+									$totalECitiesTrans += $key['transactions'];
+								}	
+								foreach($e_cities as $key){
+									echo '
+										<li>
+											<h1 class="text-right font-weight-bold">'.round($key['transactions']/$totalECitiesTrans * 100).' % </h1>
+										</li>	
+									';
+									}
+								echo '
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+		';
+		};
+		echo '
+	'; 
+  }
+
 	if(!empty($month_traffic)){
 		echo '
 		<div class="row">
@@ -57,7 +345,7 @@ echo'
 	}
 	if(!empty($visitors)){
 		echo '
-			<div class="col-lg-8 col-md-6">
+			<div class="col-lg-7 col-md-6">
 				<div class="card cust-card small-card">
 					<div class="card-body">
 						<h1 class="card-title text-center">Besökare</h1>
@@ -91,7 +379,7 @@ echo'
 	}
 	if(!empty($pagePaths)){
 		echo '
-			<div class="col-lg-4 col-md-6">
+			<div class="col-lg-5 col-md-6">
 				<div class="card cust-card small-card">
 					<div class="card-body">	
 						<h1 class="card-title text-center">Topp '.sizeof($pagePaths).' besökta sidor</h1>
@@ -135,7 +423,7 @@ echo'
   }
 	if(!empty($cities)){
 	  echo'
-		  <div class="col-lg-4 col-md-6">
+		  <div class="col-lg-5 col-md-6">
 			  <div class="card cust-card small-card">
 				  <div class="card-body">	
 						<h1 class="card-title text-center">Topp '.sizeof($cities).' orter</h1>
@@ -147,22 +435,18 @@ echo'
 						    </tr>
 						  </thead>
 						  <tbody> ';	  
-						  	$totalCities = 0;
-								foreach($cities as $key){
-									$totalCities += $key['views'];
-								}
 						  	foreach($cities as $key => $value){
 						  		echo '
 										<tr>';
 										if(isset($value['city'])){
 											echo '
 												<td>'.$value['city'].'</td>
-								      	<td class="text-right">'.round($value['views']/$totalCities * 100, 2).' %</td>
+								      	<td class="text-right">'.round($value['views'], 2).' %</td>
 											';
 										}; echo '
 								    </tr>
 						  		';
-						  	};
+						  	}; 
 						    echo '
 						  </tbody>
 						</table>
@@ -173,7 +457,7 @@ echo'
 	}
 	if(!empty($devices)){
 		echo '
-			<div class="col-lg-8 col-md-6">
+			<div class="col-lg-7 col-md-6">
 				<div class="card cust-card small-card">
 					<div class="card-body">
 						<h1 class="card-title text-center">Enheter</h1>
@@ -217,7 +501,7 @@ echo'
   }
 	if(!empty($channels_pie)){
 		echo '
-			<div class="col-lg-8 col-md-6">
+			<div class="col-lg-7 col-md-6">
 				<div class="card cust-card small-card">
 					<div class="card-body">
 						<h1 class="card-title text-center">Bästa kanaler</h1>
@@ -251,7 +535,7 @@ echo'
 	}
 	if(!empty($channels_table)){
 		echo '
-			<div class="col-lg-4 col-md-6">
+			<div class="col-lg-5 col-md-6">
 				<div class="card cust-card small-card">
 					<div class="card-body" style="height: 635px">	
 						<h1 class="card-title text-center">Kanaler</h1>
@@ -373,7 +657,6 @@ echo'
 						    </tr>
 						  </thead>
 						  <tbody> ';	  
-						  	
 						  	foreach($adsArr as $key){
 						  		echo '
 										<tr>
@@ -452,9 +735,10 @@ echo'
 	<?php if(!empty($month_traffic)){ ?>
 		Morris.Area({
 	    element: 'overview-month',
-	    data: <?php echo json_encode($month_traffic); ?>,
+	    data: [<?php foreach($month_traffic as $key => $value){
+	    	echo json_encode($value).","; } ?> ],
 	    xkey: 'date',
-	    ykeys: ['sessionsThisMonth', 'sessions'],
+	    ykeys: ['sessions', 'sessionsLastYear'],
 	    labels: ['Aktuell månad', 'Föregående år'],
 	    pointSize: 5,
 	    fillOpacity: 0,
@@ -474,9 +758,10 @@ echo'
 	<?php if(!empty($year_traffic)){ ?>
 		 Morris.Bar({
         element: 'overview-year',
-        data: <?php echo json_encode($year_traffic); ?>,
+        data: [<?php foreach($year_traffic as $key => $value){
+        	echo json_encode($value).","; }?> ],
         xkey: 'month',
-        ykeys: ['sessionsThisYear', 'sessions'],
+        ykeys: ['sessions', 'sessionsLastYear'],
         labels: ['Aktuellt år', 'Föregående år'],
         barColors:['#55ce63', '#7460ee'],
         hideHover: 'always',
@@ -592,10 +877,10 @@ echo'
 	        	} ?>
 	        ],
 	        borderWidth: [3, 3, 3, 3, 3],
-	        backgroundColor: ['#f62d51', '#7460ee', '#55ce63', '#01c0c8', '#455a64'],
+	        backgroundColor: ['#f62d51', '#7460ee', '#55ce63', '#01c0c8', '#455a64', '#1e88e5'],
 	        shadowColor: '#000',
 	        shadowBlur: 10,
-	        hoverBackgroundColor: ['#f62d51', '#7460ee', '#55ce63', '#01c0c8', '#455a64']
+	        hoverBackgroundColor: ['#f62d51', '#7460ee', '#55ce63', '#01c0c8', '#455a64', '#1e88e5']
 	      }],
 	      labels: [
 	        <?php foreach($channels_pie as $key => $value){
@@ -638,7 +923,7 @@ echo'
 	    ],
       datasets: [
         {
-          label: "Population (millions)",
+          label: "Topp 5",
           backgroundColor: ['#f62d51', '#7460ee', '#55ce63', '#01c0c8', '#455a64'],
           data: [
 	        	<?php foreach($adsArr as $key => $value){
@@ -678,6 +963,144 @@ echo'
     },
     
 	});
+	<?php } ?>
+
+	<?php if(!empty($e_commerce['e_channels'])){ ?>
+		new Chart(document.getElementById("e-channels-doughnut").getContext("2d"), {
+      type: 'doughnut',
+      data: {
+	      datasets: [{
+	        data: [
+	        	<?php foreach($e_commerce['e_channels'] as $key => $value){
+	        		echo json_encode($value['transactions']) .",";
+	        	} ?>
+	        ],
+	        borderWidth: [3, 3, 3, 3, 3],
+	        backgroundColor: ['#f62d51', '#7460ee', '#55ce63', '#01c0c8', '#455a64', '#1e88e5'],
+	        shadowColor: '#000',
+	        shadowBlur: 10,
+	        hoverBackgroundColor: ['#f62d51', '#7460ee', '#55ce63', '#01c0c8', '#455a64', '#1e88e5']
+	      }],
+	      labels: [
+	        <?php foreach($e_commerce['e_channels'] as $key => $value){
+	        	echo json_encode($value['source']) .",";
+	        } ?>     
+	      ]
+	    },
+      options: {
+        segmentShowStroke: true,
+        segmentStrokeColor: "#fff",
+        segmentStrokeWidth: 0,
+        animationSteps: 75,
+        tooltipCornerRadius: 2,
+        animationEasing: "easeOutBounce",
+        animateRotate: true,
+        animateScale: false,
+        responsive: true,
+        legend: {
+        	position: 'right',
+        	labels: {
+        		boxWidth: 40,
+        		fontSize: 44,
+        		fontStyle: 'normal',
+        		fontColor: 'black',
+        	}
+      	},
+      	cutoutPercentage: 50,
+    	}
+  	});
+	<?php } ?>
+
+	<?php if(!empty($e_commerce['e_devices'])){ ?>
+		new Chart(document.getElementById("e-devices-doughnut").getContext("2d"), {
+      type: 'doughnut',
+      data: {
+	      datasets: [{
+	        data: [
+	        	<?php foreach($e_commerce['e_devices'] as $key => $value){
+	        		echo json_encode($value['transactions']) .",";
+	        	} ?>
+	        ],
+	        borderWidth: [3, 3, 3, 3, 3],
+	        backgroundColor: ['#55ce63', '#7460ee', '#01c0c8'],
+	        shadowColor: '#000',
+	        shadowBlur: 10,
+	        hoverBackgroundColor: ['#55ce63', '#7460ee', '#01c0c8']
+	      }],
+	      labels: [
+	        <?php foreach($e_commerce['e_devices'] as $key => $value){
+	        	echo json_encode($value['device']) .",";
+	        } ?>     
+	      ]
+	    },
+      options: {
+        segmentShowStroke: true,
+        segmentStrokeColor: "#fff",
+        segmentStrokeWidth: 0,
+        animationSteps: 75,
+        tooltipCornerRadius: 2,
+        animationEasing: "easeOutBounce",
+        animateRotate: true,
+        animateScale: false,
+        responsive: true,
+        legend: {
+        	position: 'right',
+        	labels: {
+        		boxWidth: 40,
+        		fontSize: 44,
+        		fontStyle: 'normal',
+        		fontColor: 'black',
+        	}
+      	},
+      	cutoutPercentage: 50,
+    	}
+  	});
+	<?php } ?>
+
+	<?php if(!empty($e_cities)){ ?>
+		new Chart(document.getElementById("e-cities-doughnut").getContext("2d"), {
+      type: 'doughnut',
+      data: {
+	      datasets: [{
+	        data: [
+	        	<?php foreach($e_cities as $key => $value){
+	        		echo json_encode($value['transactions']) .",";
+	        	} ?>
+	        ],
+	        borderWidth: [3, 3, 3, 3, 3],
+	        backgroundColor: ['#01c0c8', '#f62d51', '#7460ee', '#55ce63', '#455a64', '#1e88e5'],
+	        shadowColor: '#000',
+	        shadowBlur: 10,
+	        hoverBackgroundColor: ['#01c0c8', '#f62d51', '#7460ee', '#55ce63', '#455a64', '#1e88e5']
+	      }],
+	      labels: [
+	        <?php foreach($e_cities as $key => $value){
+	        	echo json_encode($value['city']) .",";
+	        } ?>     
+	      ]
+	    },
+      options: {
+        segmentShowStroke: true,
+        segmentStrokeColor: "#fff",
+        segmentStrokeWidth: 0,
+        animationSteps: 75,
+        tooltipCornerRadius: 2,
+        animationEasing: "easeOutBounce",
+        animateRotate: true,
+        animateScale: false,
+        responsive: true,
+        legend: {
+        	position: 'right',
+        	labels: {
+        		boxWidth: 40,
+        		fontSize: 44,
+        		fontStyle: 'normal',
+        		fontColor: 'black',
+        	}
+      	},
+      	cutoutPercentage: 50,
+    	}
+  	});
 	<?php } ?>
 
 </script>

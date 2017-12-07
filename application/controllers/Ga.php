@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+
 require_once './vendor/autoload.php';
 
 class Ga extends CI_Controller {
@@ -104,8 +105,8 @@ Calls the function to get the Google Analytics report-----*/
 		  $_SESSION['access_token'] = $client->getAccessToken();
 		  $redirect_uri = 'https://test3.testserver.se';
 		  header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
-		/*If oauth2 doesn't work, use this link*/
-		 // header('***');
+		/* If oauth2 doesn't work, use this link. Replace the client_id with the client_id from client_secrets.json*/
+		 // ****');
 		}
 	}
 /*-----Creates the Google client and when auhtorized, calls the functions to get the specific reports from Google Analytics and displays them in the view display_results-----*/
@@ -115,6 +116,7 @@ Calls the function to get the Google Analytics report-----*/
 		$client = new Google_Client();
 		$client->setAuthConfig('/home/test/www3/client_secrets.json');
 		$client->addScope(Google_Service_Analytics::ANALYTICS_READONLY);
+	
 
 		/* If the user has already authorized this app then get an access token else redirect to ask the user to authorize access to Google Analytics */
 		if (isset($_SESSION['access_token']) && $_SESSION['access_token']) {	
@@ -131,6 +133,11 @@ Calls the function to get the Google Analytics report-----*/
 			  $monthLastYear = $this->_get_monthData($analytics, $_SESSION['startPrevYearMonth'], $_SESSION['endPrevYearMonth']);
 			  $allMonthsThisYear = $this->_get_yearData($analytics, $_SESSION['firstThisYear'], $_SESSION['endThisMonth']);
 			  $allMonthsLastYear = $this->_get_yearData($analytics, $_SESSION['startOfLastYear'], $_SESSION['endOfLastYear']);
+			  $e_channelResults = $this->_get_e_channels($analytics);
+			  $e_deviceResults = $this->_get_e_devices($analytics);
+			  $e_cityResults = $this->_get_e_cities($analytics);
+			  $e_overview = $this->_get_e_overview($analytics);
+			  $get_ads = $this->_get_ads($analytics);
 
 			  $this->load->view('header.php');
 				$this->load->view('display_results', array(
@@ -143,6 +150,10 @@ Calls the function to get the Google Analytics report-----*/
 	 				'lastYearMonth' => $monthLastYear,
 	 				'allMonthsThisYear' => $allMonthsThisYear,
 	 				'allMonthsLastYear' => $allMonthsLastYear,
+	 				'e_channels' => $e_channelResults,
+	 				'e_devices' => $e_deviceResults,
+	 				'e_cities' => $e_cityResults,
+	 				'e_overview' => $e_overview,
 	 				'companyName' => $_SESSION['companyName'],
 	 				'month' => $_SESSION['month'],
 	    	));
@@ -151,7 +162,9 @@ Calls the function to get the Google Analytics report-----*/
 			}catch(apiException $e){
 				$msg = $e->getMessage;
 				if((strpos($msg, 'invalid authentication credentials') !== false)){
-					header('Location: ***');
+					header($auth_url);
+					/* If oauth2 doesn't work, use this link. Replace the client_id with the client_id from client_secrets.json*/
+					//***');
 			  }else {
 			  	var_dump($e->getCode() .': '. $e->getMessage);
 			  }
@@ -177,55 +190,57 @@ In the view file, checks if the array/variable is not empty and in that case pas
 		$pagePaths = [];
 		$cities = [];
 		$year_traffic = [];
+		$adsArr = [];
+		$totalAdClicks = "";
+		$totalAdViews = "";
+		$totalAdPosition = "";
+		$totalAdTop = "";
+		$e_commerce = [];
+		$e_cities = [];
 
-		if(isset($_POST['month-traffic-table'])){
-			$postArr = str_replace("'", '"', $_POST['month-traffic-table']);
-			$postArr = json_decode($postArr, true);
-			foreach($postArr as $key => $value){
-				array_push($month_traffic, $value);
-			}
-			foreach($month_traffic[0]['thisYear'] as $key => $value){
-				$month_traffic[1]['lastYear'][$key]['sessionsThisMonth'] = $value['sessions'];
-			}
-			$month_traffic = $month_traffic[1]['lastYear'];
-			foreach($month_traffic as $key => $value){
-				if(!isset($month_traffic[$key]['sessionsThisMonth'])){
-					$month_traffic[$key]['sessionsThisMonth'] = 0;
+		if (isset($_POST['month-traffic-table'])) {
+	    $postArr = str_replace("'", '"', $_POST['month-traffic-table']);
+	    $month_traffic = json_decode($postArr, true);
+	   
+	   	foreach ($month_traffic['lastYear'] as $key => $value) {
+	   		$month_traffic['lastYear'][$key]['date'] = substr($month_traffic['lastYear'][$key]['date'], -2);
+	   	}
+			foreach ($month_traffic['thisYear'] as $key => $value) {
+				$month_traffic['thisYear'][$key]['date'] = substr($month_traffic['thisYear'][$key]['date'], -2);
+				if(!isset($month_traffic['lastYear'][$key]['date'])){
+					$month_traffic['lastYear'][$key]['date'] = strval($key);
+					$month_traffic['lastYear'][$key]['sessions'] = 0;
 				}
-				$month_traffic[$key]['date'] = substr($month_traffic[$key]['date'], -2);
+				if($month_traffic['thisYear'][$key]['date'] === $month_traffic['lastYear'][$key]['date']){
+					$month_traffic['thisYear'][$key]['sessionsLastYear'] = $month_traffic['lastYear'][$key]['sessions'];
+			  }
 			}
-		}
+			$days = array();
+			foreach($month_traffic['thisYear'] as $key => $value){
+				$days[$key] = $month_traffic['thisYear'][$key]['date'];
+			}
+			array_multisort($days, SORT_ASC, $month_traffic['thisYear']);
+			$month_traffic = $month_traffic['thisYear'];
+	  }
 		
 		if(isset($_POST['visitors-pie'])){
 			$postArr = str_replace("'", '"', $_POST['visitors-pie']);
-			$postArr = json_decode($postArr, true);
-			foreach($postArr as $key => $value){
-			  array_push($visitors, $value);
-			}
+			$visitors = json_decode($postArr, true);
 		}
 
 		if(isset($_POST['devices-pie'])){
 			$postArr = str_replace("'", '"', $_POST['devices-pie']);
-			$postArr = json_decode($postArr, true);
-			foreach ($postArr as $key => $value) {
-				array_push($devices, $value);
-			}
+			$devices = json_decode($postArr, true);
 		}
 
 		if(isset($_POST['channels-table'])){
 			$postArr = str_replace("'", '"', $_POST['channels-table']);
-			$postArr = json_decode($postArr, true);
-			foreach ($postArr as $key => $value) {
-				array_push($channels_table, $value);
-			}
+			$channels_table = json_decode($postArr, true);
 		}
 
 		if(isset($_POST['channels-pie'])){
 			$postArr = str_replace("'", '"', $_POST['channels-pie']);
-			$postArr = json_decode($postArr, true);
-			foreach ($postArr as $key => $value) {
-				array_push($channels_pie, $value);
-			}
+			$channels_pie = json_decode($postArr, true);
 		}
 
 		$pageArr = [];
@@ -256,66 +271,78 @@ In the view file, checks if the array/variable is not empty and in that case pas
 			}
 		}
 
-		if(isset($_POST['year-traffic-table'])){
-			$postArr = str_replace("'", '"', $_POST['year-traffic-table']);
-			$postArr = json_decode($postArr, true);
-			foreach($postArr as $key => $value){
-				array_push($year_traffic, $value);
+		if (isset($_POST['year-traffic-table'])) {
+	    $postArr = str_replace("'", '"', $_POST['year-traffic-table']);
+	    $year_traffic = json_decode($postArr, true);
+
+	    foreach($year_traffic['lastYear'] as $key => $value){
+				if(!isset($year_traffic['thisYear'][$key]['month'])){
+					$year_traffic['thisYear'][$key]['month'] = strval($key);
+					$year_traffic['thisYear'][$key]['sessions'] = 0;
+				}
 			}
-			foreach($year_traffic[0]['thisYear'] as $key => $value){
-				$year_traffic[1]['lastYear'][$key]['sessionsThisYear'] = $value['sessions'];
+	    foreach ($year_traffic['thisYear'] as $key => $value) {
+				if(!isset($year_traffic['lastYear'][$key]['month'])){
+					$year_traffic['lastYear'][$key]['month'] = strval($key);
+					$year_traffic['lastYear'][$key]['sessions'] = 0;
+				}
+				if($year_traffic['thisYear'][$key]['month'] == $year_traffic['lastYear'][$key]['month']){
+				$year_traffic['thisYear'][$key]['sessionsLastYear'] = $year_traffic['lastYear'][$key]['sessions'];
+			  }
 			}
-			$year_traffic = $year_traffic[1]['lastYear'];
-			foreach($year_traffic as $key => $value){
-				if(!isset($year_traffic[$key]['sessionsThisYear'])){
-					$year_traffic[$key]['sessionsThisYear'] = 0;
+			$months = array();
+			foreach($year_traffic['thisYear'] as $key => $value){
+				$months[$key] = $year_traffic['thisYear'][$key]['month'];
+			}
+			array_multisort($months, SORT_ASC, $year_traffic['thisYear']);
+			$year_traffic = $year_traffic['thisYear'];
+    }
+
+		if(isset($_POST['eCommerce-card'])){
+			$postArr = str_replace("'", '"', $_POST['eCommerce-card']);
+			$e_commerce = json_decode($postArr, true);
+			
+			$e_cityArr = [];
+			for($i = 0; $i < 10; $i++){
+				if(isset($_POST["e-cities-table$i"])){
+					$cityPostArr = str_replace("'", '"', $_POST["e-cities-table$i"]);
+					$cityPostArr = json_decode($cityPostArr, true);
+					array_push($e_cityArr, $cityPostArr);
+				}
+			}
+			if(!empty($e_cityArr)){
+				foreach ($e_cityArr as $key => $value) {
+					array_push($e_cities, $value);
 				}
 			}
 		}
+
 		if(isset($_POST['adWords-card'])){
 			$searchArr = [];
 			$groupArr = [];
 			$clickArr = [];
 			$viewsArr = [];
 			$positionArr = [];
-			$adsArr = [];
 
 			for($i = 1; $i <= 5; $i++){
 				array_push($searchArr, $_POST["adword-search$i"]);
-			}
-			for($i = 1; $i <= 5; $i++){
 				array_push($groupArr, $_POST["adword-group$i"]);
-			}
-			for($i = 1; $i <= 5; $i++){
 				array_push($clickArr, $_POST["adword-click$i"]);
-			}
-			for($i = 1; $i <= 5; $i++){
 				array_push($viewsArr, $_POST["adword-views$i"]);
-			}
-			for($i = 1; $i <= 5; $i++){
 				array_push($positionArr, $_POST["adword-position$i"]);
 			}
 			
 			foreach ($searchArr as $key => $value) {
-				array_push($adsArr, ['adSearch' => $value]);
-			}
-			foreach($groupArr as $key => $value){
-				$adsArr[$key]['adGroup'] = $value;
-			}
-			foreach($clickArr as $key => $value){
-				$adsArr[$key]['adClicks'] = $value;
-			}
-			foreach($viewsArr as $key => $value){
-				$adsArr[$key]['adViews'] = $value;
-			}
-			foreach($positionArr as $key => $value){
-				$adsArr[$key]['adPosition'] = $value;
+				$adsArr[] = [
+					'adSearch' => $value,
+					'adGroup' => $groupArr[$key],
+					'adClicks' => $clickArr[$key],
+					'adViews' => $viewsArr[$key],
+					'adPosition' => $positionArr[$key],
+
+				];
 			}
 			
-			$totalAdClicks = "";
-			$totalAdViews = "";
-			$totalAdPosition = "";
-			$totalAdTop = "";
 			$totalAdClicks = $_POST['adword-total-click'];
 			$totalAdViews = $_POST['adword-total-views'];
 			$totalAdPosition = $_POST['adword-total-position'];
@@ -337,6 +364,8 @@ In the view file, checks if the array/variable is not empty and in that case pas
 	 		'totalAdViews' => $totalAdViews,
 	 		'totalAdPosition' => $totalAdPosition,
 	 		'totalAdTop' => $totalAdTop,
+	 		'e_commerce' => $e_commerce,
+	 		'e_cities' => $e_cities,
 	 		'companyName' => $_SESSION['companyName'],
 	 		'month' => $_SESSION['month'],
 		));
@@ -393,40 +422,18 @@ Returns data to the function that made this call*/
 	{
 		$gaResults = $this->_get_analytics($analytics, $startDate, $endDate, "ga:sessions", "ga:date", "ga:date");
 
+		$mergedArr = [];
 	  foreach($gaResults->reports as $key){
 			$data = $key->data;
 			$rows = $data->rows;
-			$dateRange = [];
-			$sessionRange = [];
+			$mergedArr = [];
 			foreach ($rows as $key) {
-	  		array_unshift($dateRange, $key->dimensions[0]);
-	  		array_unshift($sessionRange, intval($key->metrics[0]->values[0]));
+				$mergedArr[substr($key->dimensions[0], -2)] = [
+					'date' => $key->dimensions[0],
+					'sessions' => intval($key->metrics[0]->values[0]),
+				];
 	  	}	
 		}
-
-		$dates = [];
-		for($i = 0; $i < sizeof($dateRange); $i++){
-			array_push($dates, $dateRange[$i]);
-		}
-		$sessions = [];
-		for($i = 0; $i < sizeof($dates); $i++){
-			array_push($sessions, $sessionRange[$i]);
-		}
-
-		$mergedArr = [];
-		$merged2 = [];
-
-		foreach ($dates as $key => $value) {
-			array_push($mergedArr, ['date' => $value]);
-		}
-		foreach ($sessions as $key => $value) {
-			array_push($merged2, ['sessions' => $value]);
-		}
-		
-		foreach ($merged2 as $key => $value) {
-			$mergedArr[$key]['sessions'] = $value['sessions'];
-		}
-
 		return $mergedArr;
 	}
 
@@ -437,35 +444,16 @@ Returns data to the function that made this call*/
 	function _get_yearData($analytics, $startDate, $endDate) 
 	{
 		$gaResults = $this->_get_analytics($analytics, $startDate, $endDate, "ga:sessions", "ga:month", "ga:month");
+		$mergedArr = [];
 	  foreach($gaResults->reports as $key){
 			$data = $key->data;
 			$rows = $data->rows;
-			$dateRange = [];
-			$sessionRange = [];
 			foreach ($rows as $key) {
-	  		array_unshift($dateRange, $key->dimensions[0]);
-	  		array_unshift($sessionRange, intval($key->metrics[0]->values[0]));
+				$mergedArr[$key->dimensions[0]] = [
+					'month' => $key->dimensions[0],
+					'sessions' => intval($key->metrics[0]->values[0]),
+				];
 	  	}	
-		}
-	
-		$dates = [];
-		for($i = 0; $i < sizeof($dateRange); $i++){
-			array_push($dates, $dateRange[$i]);
-		}
-		$sessions = [];
-		for($i = 0; $i < sizeof($dates); $i++){
-			array_push($sessions, $sessionRange[$i]);
-		}
-		$mergedArr = [];
-		$merged2 = [];
-		foreach ($dates as $key => $value) {
-			array_push($mergedArr, ['month' => $value]);
-		}
-		foreach ($sessions as $key => $value) {
-			array_push($merged2, ['sessions' => $value]);
-		}
-		foreach ($merged2 as $key => $value) {
-			$mergedArr[$key]['sessions'] = $value['sessions'];
 		}
 	  return $mergedArr;
 	}
@@ -473,7 +461,7 @@ Returns data to the function that made this call*/
 /*------Creates report for the channels uses to find the website. 
 Doesn't use get_analytics() because it has two dimension values.
 Gets analytics object from $channelResults in get_results. 
-Merges the different arrays into one and translates the channels to swedish.
+Merges the data into one array and translates the channels to swedish.
 Returns array of data to $channelResults-----*/
 	function _get_channels($analytics) 
 	{
@@ -509,53 +497,25 @@ Returns array of data to $channelResults-----*/
 
 	  $gaResults = $analytics->reports->batchGet( $body );
 
+	  $mergedArr = [];
 	  foreach($gaResults->reports as $key){
 			$data = $key->data;
 			$rows = $data->rows;
-			$source = [];
-			$social = [];
-			$sessions = [];
 			foreach ($rows as $key) {
-	  		array_push($source, $key->dimensions[0]);
-	  		array_push($social, $key->dimensions[1]);
-	  		array_push($sessions, $key->metrics[0]->values[0]);
+	  		$mergedArr[$key->dimensions[0] . $key->dimensions[1]] = [
+	  			'source' => $key->dimensions[0],
+	  			'hasSocial' => $key->dimensions[1],
+	  			'sessions' => $key->metrics[0]->values[0],
+	  		];
 	  	}	
 		}
-		/*used during development to see all values in array
-		$arr = ["1" => "1"];
-		foreach($arr as $key){
-			if($source !== "cpc"){
-				array_unshift($source, "cpc");
-				array_unshift($social, "No");
-				array_unshift($sessions, "300");
-			}
+		if(!empty($mergedArr["emailNo"]) && !empty($mergedArr['referralYes'])) {
+			$mergedArr['referralYes']['sessions'] += $mergedArr['emailNo']['sessions'];
+			unset($mergedArr['emailNo']);
 		}
-		*/
-		$mergedArr = [];
-		$merged2 = [];
-		$merged3 = [];
-		foreach ($source as $key => $value) {
-			array_push($mergedArr, ['source' => $value]);
-			
-		}
-		foreach ($social as $key => $value) {
-			array_push($merged2, ['hasSocial' => $value]);
-		}
-		foreach ($sessions as $key => $value) {
-			array_push($merged3, ['sessions' => $value]);
-		}
-		foreach ($merged2 as $key => $value) {
-			$mergedArr[$key]['hasSocial'] = $value['hasSocial'];
-		}
-		foreach ($merged3 as $key => $value) {
-			$mergedArr[$key]['sessions'] = $value['sessions'];
-		}
-		$merged2 = [];
-		$merged3 = [];
-
 		foreach ($mergedArr as $key => $value) {
 			if($value['hasSocial'] === "Yes" && $value['source'] === "referral"){
-				$mergedArr[$key]['source'] = "Socialt Nätverk";
+				$mergedArr[$key]['source'] = "Socialt & E-post";
 			}
 			if($value['source'] === "(none)"){
 				$mergedArr[$key]['source'] = "Direkt";
@@ -569,91 +529,78 @@ Returns array of data to $channelResults-----*/
 			if($value['source'] === "cpc"){
 				$mergedArr[$key]['source'] = "Annons";
 			}
+			if(!in_array($key, ["referralNo", "cpcNo", "organicNo", "(none)No", "referralYes"])){
+				$mergedArr['referralNo']['sessions'] += $mergedArr[$key]['sessions'];
+				unset($mergedArr[$key]);
+			}
 		}
     return $mergedArr;
 	}
+
 /*------Creates report for the type of users visiting the website. 
 Gets analytics object from $userResults in get_results(). 
 Calls get_analytics() with more arguments.
-Merges the different arrays into one and translates the channels to swedish.
+Merges the data into one array and translates the channels to swedish.
 Returns array data to $userResults-----*/
 	function _get_users($analytics) 
 	{
 	  $gaResults = $this->_get_analytics($analytics, $_SESSION['startThisMonth'], $_SESSION['endThisMonth'], "ga:sessions", "ga:userType", "ga:sessions");
+
+	  $mergedArr = [];
 	  foreach($gaResults->reports as $key){
 			$data = $key->data;
 			$rows = $data->rows;
 			$userType = [];
 			$quantity = [];
 			foreach ($rows as $key) {
-	  		array_push($userType, $key->dimensions[0]);
-	  		array_push($quantity, $key->metrics[0]->values[0]);
+				$mergedArr[] = [
+					'userType' => $key->dimensions[0],
+					'quantity' => $key->metrics[0]->values[0]
+				];
 	  	}	
 		}
-		$mergedArr = [];
-		$merged2 = [];
-		foreach ($userType as $key => $value) {
-			if($value === "New Visitor"){
-				$value = "Nya";
-			} else if($value === "Returning Visitor"){
-				$value = "Återkommande";
+		foreach ($mergedArr as $key => $value) {
+			if($value['userType'] === "New Visitor"){
+				$mergedArr[$key]['userType'] = "Nya";
+			} else if($value['userType'] === "Returning Visitor"){
+				$mergedArr[$key]['userType'] = "Återkommande";
 			}
-			array_push($mergedArr, ['userType' => $value]);
 		}
-		foreach ($quantity as $key => $value) {
-			array_push($merged2, ['quantity' => $value]);
-		}
-		foreach ($merged2 as $key => $value) {
-			$mergedArr[$key]['quantity'] = $value['quantity'];
-		}	
 		return $mergedArr;
 	}
+
 /*------Creates report for the type of devices used to visit the website. 
 Gets analytics object from $deviceResults in get_results(). 
 Calls get_analytics() with more arguments.
-Merges the different arrays into one and translates the devices to swedish.
+Merges the data into one array and translates the devices to swedish.
 Returns array of data to $deviceResults-----*/
 	function _get_devices($analytics) 
 	{
 	  $gaResults = $this->_get_analytics($analytics, $_SESSION['startThisMonth'], $_SESSION['endThisMonth'], "ga:sessions", "ga:deviceCategory", "ga:sessions");
+
+	  $mergedArr = [];
 	  foreach($gaResults->reports as $key){
 			$data = $key->data;
 			$rows = $data->rows;
-			$devices = [];
-			$quantity = [];
 			foreach ($rows as $key) {
-	  		array_push($devices, $key->dimensions[0]);
-	  		array_push($quantity, $key->metrics[0]->values[0]);
+				$mergedArr[] = [
+					'device' => $key->dimensions[0],
+					'usage' => $key->metrics[0]->values[0],
+				];
 	  	}	
 		}
-		$topDevice = [];
-		for($i = 0; $i < sizeof($devices); $i++){
-			array_push($topDevice, $devices[$i]);
-		}
-		$topUsage = [];
-		for($i = 0; $i < sizeof($topDevice); $i++){
-			array_push($topUsage, $quantity[$i]);
-		}
-		$mergedArr = [];
-		$merged2 = [];
-		foreach ($topDevice as $key => $value) {
-			if($value === "desktop"){
-				$value = "Dator";
-			} else if($value === "mobile"){
-				$value = "Mobil";
-			}else if($value === "tablet"){
-				$value = "Surfplatta";
+		foreach ($mergedArr as $key => $value) {
+			if($value['device'] === "desktop"){
+				$mergedArr[$key]['device'] = "Dator";
+			}else if($value['device'] === "mobile"){
+				$mergedArr[$key]['device'] = "Mobil";
+			}else if($value['device'] === "tablet"){
+				$mergedArr[$key]['device'] = "Surfplatta";
 			}
-			array_push($mergedArr, ['device' => $value]);
-		}
-		foreach ($topUsage as $key => $value) {
-			array_push($merged2, ['usage' => $value]);
-		}
-		foreach ($merged2 as $key => $value) {
-			$mergedArr[$key]['usage'] = $value['usage'];
 		}
 		return $mergedArr;
 	}
+
 /*------Creates report for what city the visitors the website comes from. 
 Gets analytics object from $cityResults in get_results(). 
 Calls get_analytics() with more arguments.
@@ -664,39 +611,30 @@ Returns array of data with top 10 cities to $cityResults-----*/
 	  foreach($gaResults->reports as $key){
 			$data = $key->data;
 			$rows = $data->rows;
-			$cities = [];
-			$viewsPerCity = [];
+			$totals = $data->totals[0]->values[0];
 			foreach ($rows as $key) {
-	  		array_push($cities, $key->dimensions[0]);
-	  		array_push($viewsPerCity, $key->metrics[0]->values[0]);
+				$mergedArr[] = [
+					'city' => $key->dimensions[0],
+					'views' => $key->metrics[0]->values[0]/$totals * 100,
+				];
 	  	}	
 		}
-		if(sizeof($cities) > 10){
+		if(!isset($mergedArr)){
+			$mergedArr = [];
+		}
+		if(sizeof($mergedArr) > 10){
 			$len = 10;
 		}else {
-			$len = sizeof($cities);
+			$len = sizeof($mergedArr);
 		}
+
 		$topCities = [];
 		for($i = 0; $i < $len; $i++){
-			array_push($topCities, $cities[$i]);
+			array_push($topCities, $mergedArr[$i]);
 		}
-		$topViews = [];
-		for($i = 0; $i < sizeof($topCities); $i++){
-			array_push($topViews, $viewsPerCity[$i]);
-		}
-		$mergedArr = [];
-		$merged2 = [];
-		foreach ($topCities as $key => $value) {
-			array_push($mergedArr, ['city' => $value]);
-		}
-		foreach ($topViews as $key => $value) {
-			array_push($merged2, ['views' => $value]);
-		}
-		foreach ($merged2 as $key => $value) {
-			$mergedArr[$key]['views'] = $value['views'];
-		}
-		return $mergedArr;
+		return $topCities;
 	}
+
 /*------Creates report for which pages on the websites users look at the most. 
 Gets analytics object from $pagePathResults in get_results(). 
 Calls get_analytics() with more arguments.
@@ -704,41 +642,357 @@ Returns array of data with top 10 pages to $pagePathResults-----*/
 	function _get_pageviews($analytics) 
 	{
 	  $gaResults = $this->_get_analytics($analytics, $_SESSION['startThisMonth'], $_SESSION['endThisMonth'], "ga:pageviews", "ga:pagePath", "ga:pageviews");
+
+	  $mergedArr = [];
 	  foreach($gaResults->reports as $key){
 			$data = $key->data;
 			$rows = $data->rows;
-			$pagePath = [];
-			$viewsPerPage = [];
 			foreach ($rows as $key) {
-	  		array_push($pagePath, $key->dimensions[0]);
-	  		array_push($viewsPerPage, $key->metrics[0]->values[0]);
+				$mergedArr[] = [
+					'pagePath' => $key->dimensions[0],
+					'views' => $key->metrics[0]->values[0],
+				];
 	  	}	
 		}
-		if(sizeof($pagePath) > 10){
+		if(sizeof($mergedArr) > 10){
 			$len = 10;
 		}else {
-			$len = sizeof($pagePath);
+			$len = sizeof($mergedArr);
 		}
 		$topPages = [];
 		for($i = 0; $i < $len; $i++){
-			array_push($topPages, $pagePath[$i]);
+			array_push($topPages, $mergedArr[$i]);
 		}
-		$topViews = [];
-		for($i = 0; $i < sizeof($topPages); $i++){
-			array_push($topViews, $viewsPerPage[$i]);
-		}
-		$mergedArr = [];
-		$merged2 = [];
-		foreach ($topPages as $key => $value) {
-			array_push($mergedArr, ['pagePath' => $value]);
-		}
-		foreach ($topViews as $key => $value) {
-			array_push($merged2, ['views' => $value]);
-		}
-		foreach ($merged2 as $key => $value) {
-			$mergedArr[$key]['views'] = $value['views'];
-		}
-		return $mergedArr;
+		return $topPages;
 	}
+
+/*------Creates report for the channels uses to make a purcahse. 
+Doesn't use get_analytics() because it has two dimension and two metric values.
+Gets analytics object from $e_channelResults in get_results. 
+Merges the data into one array and translates the channels to swedish.
+Returns array of data to $e_channelResults-----*/
+	function _get_e_channels($analytics) 
+	{
+	  $dateRange = new Google_Service_AnalyticsReporting_DateRange();
+	  $dateRange->setStartDate($_SESSION['startThisMonth']);
+	  $dateRange->setEndDate($_SESSION['endThisMonth']);
+
+	  $metric_values = [
+	  	["expression" => "ga:transactions", "alias" => "transactions"],
+	  	["expression" => "ga:localTransactionRevenue", "alias" => "localTransactionRevenue"],
+	  ];
+	  json_encode($metric_values);
+
+	  $dimensions = [
+	  	["name" => "ga:medium"],
+	  	["name" => "ga:hasSocialSourceReferral"],
+	  ];
+	  json_encode($dimensions);
+	  
+		$ordering = new Google_Service_AnalyticsReporting_OrderBy();
+		$ordering->setFieldName("ga:localTransactionRevenue");
+		$ordering->setOrderType("VALUE");   
+    $ordering->setSortOrder("DESCENDING");
+
+	  $request = new Google_Service_AnalyticsReporting_ReportRequest();
+	  $request->setViewId($_SESSION['companyId']);
+	  $request->setDateRanges($dateRange);
+	  $request->setOrderBys($ordering);
+	  $request->setDimensions(array($dimensions));
+	  $request->setMetrics(array($metric_values));
+
+	  $body = new Google_Service_AnalyticsReporting_GetReportsRequest();
+	  $body->setReportRequests( array( $request) );
+
+	  $gaResults = $analytics->reports->batchGet( $body );
+
+	  $mergedArr = [];
+	  foreach($gaResults->reports as $key){
+			$data = $key->data;
+			$rows = $data->rows;
+			foreach ($rows as $key) {
+	  		$mergedArr[$key->dimensions[0] . $key->dimensions[1]] = [
+	  			'source' => $key->dimensions[0],
+	  			'hasSocial' => $key->dimensions[1],
+	  			'transactions' => $key->metrics[0]->values[0],
+	  			'revenue' => $key->metrics[0]->values[1],
+	  		];
+	  	}	
+		}
+		if(isset($mergedArr['emailNo']) && !empty($mergedArr['referralYes'])) {
+			$mergedArr['referralYes']['transactions'] += $mergedArr['emailNo']['transactions'];
+			$mergedArr['referralYes']['revenue'] += $mergedArr['emailNo']['revenue'];
+			unset($mergedArr['emailNo']);
+		}
+		foreach ($mergedArr as $key => $value) {
+			if($value['hasSocial'] === "Yes" && $value['source'] === "referral"){
+				$mergedArr[$key]['source'] = "Socialt & E-post";
+			}
+			if($value['source'] === "(none)"){
+				$mergedArr[$key]['source'] = "Direkt";
+			}
+			if($value['source'] === "organic"){
+				$mergedArr[$key]['source'] = "Organisk";
+			}
+			if($value['hasSocial'] === "No" && $value['source'] === "referral"){
+				$mergedArr[$key]['source'] = "Hänvisning";
+			}
+			if($value['source'] === "cpc"){
+				$mergedArr[$key]['source'] = "Annons";
+			}
+			if(!in_array($key, ["referralNo", "cpcNo", "organicNo", "(none)No", "referralYes"])){
+				$mergedArr['referralNo']['transactions'] += $mergedArr[$key]['transactions'];
+				$mergedArr['referralNo']['revenue'] += $mergedArr[$key]['revenue'];
+				unset($mergedArr[$key]);
+			}
+		}
+    return $mergedArr;
+	}
+
+/*------Creates report for the devices uses to make a purcahse. 
+Doesn't use get_analytics() because it has two metric values.
+Gets analytics object from $e_deviceResults in get_results. 
+Merges the data into one array and translates the devices to swedish.
+Returns array of data to $e_deviceResults-----*/
+	function _get_e_devices($analytics) 
+	{
+	  $dateRange = new Google_Service_AnalyticsReporting_DateRange();
+	  $dateRange->setStartDate($_SESSION['startThisMonth']);
+	  $dateRange->setEndDate($_SESSION['endThisMonth']);
+
+	  $metric_values = [
+	  	["expression" => "ga:transactions", "alias" => "transactions"],
+	  	["expression" => "ga:localTransactionRevenue", "alias" => "localTransactionRevenue"],
+	  ];
+	  json_encode($metric_values);
+
+	  $dimensions = [
+	  	["name" => "ga:deviceCategory"],
+	  ];
+	  json_encode($dimensions);
+	  
+		$ordering = new Google_Service_AnalyticsReporting_OrderBy();
+		$ordering->setFieldName("ga:localTransactionRevenue");
+		$ordering->setOrderType("VALUE");   
+    $ordering->setSortOrder("DESCENDING");
+
+	  $request = new Google_Service_AnalyticsReporting_ReportRequest();
+	  $request->setViewId($_SESSION['companyId']);
+	  $request->setDateRanges($dateRange);
+	  $request->setOrderBys($ordering);
+	  $request->setDimensions(array($dimensions));
+	  $request->setMetrics(array($metric_values));
+
+	  $body = new Google_Service_AnalyticsReporting_GetReportsRequest();
+	  $body->setReportRequests( array( $request) );
+
+	  $gaResults = $analytics->reports->batchGet( $body );
+
+	  $mergedArr = [];
+	  foreach($gaResults->reports as $key){
+			$data = $key->data;
+			$rows = $data->rows;
+			foreach ($rows as $key) {
+				$mergedArr[] = [
+					'device' => $key->dimensions[0],
+					'transactions' => $key->metrics[0]->values[0],
+					'revenue' => $key->metrics[0]->values[1],
+				];
+	  	}	
+		}
+
+		foreach ($mergedArr as $key => $value) {
+			if($value['device'] === "desktop"){
+				$mergedArr[$key]['device'] = "Dator";
+			}else if($value['device'] === "mobile"){
+				$mergedArr[$key]['device'] = "Mobil";
+			}else if($value['device'] === "tablet"){
+				$mergedArr[$key]['device'] = "Surfplatta";
+			}
+		}
+		return $mergedArr; 
+	}
+
+/*------Creates report for the cities where the user who makes a purcahse is from. 
+Doesn't use get_analytics() because it has two metric values.
+Gets analytics object from $e_cityResults in get_results. 
+Merges the data into one array.
+Returns array of data to $e_cityResults-----*/
+	function _get_e_cities($analytics) 
+	{
+	  $dateRange = new Google_Service_AnalyticsReporting_DateRange();
+	  $dateRange->setStartDate($_SESSION['startThisMonth']);
+	  $dateRange->setEndDate($_SESSION['endThisMonth']);
+
+	  $metric_values = [
+	  	["expression" => "ga:transactions", "alias" => "transactions"],
+	  	["expression" => "ga:localTransactionRevenue", "alias" => "localTransactionRevenue"],
+	  ];
+	  json_encode($metric_values);
+
+	  $dimensions = [
+	  	["name" => "ga:city"],
+	  ];
+	  json_encode($dimensions);
+	  
+		$ordering = new Google_Service_AnalyticsReporting_OrderBy();
+		$ordering->setFieldName("ga:localTransactionRevenue");
+		$ordering->setOrderType("VALUE");   
+    $ordering->setSortOrder("DESCENDING");
+
+	  $request = new Google_Service_AnalyticsReporting_ReportRequest();
+	  $request->setViewId($_SESSION['companyId']);
+	  $request->setDateRanges($dateRange);
+	  $request->setOrderBys($ordering);
+	  $request->setDimensions(array($dimensions));
+	  $request->setMetrics(array($metric_values));
+
+	  $body = new Google_Service_AnalyticsReporting_GetReportsRequest();
+	  $body->setReportRequests( array( $request) );
+
+	  $gaResults = $analytics->reports->batchGet( $body );
+
+	  $mergedArr = [];
+	  foreach($gaResults->reports as $key){
+			$data = $key->data;
+			$rows = $data->rows;
+			foreach ($rows as $key) {
+				$mergedArr[] = [
+					'city' => $key->dimensions[0],
+					'transactions' => $key->metrics[0]->values[0],
+					'revenue' => $key->metrics[0]->values[1],
+				];
+	  	}	
+		}
+		if(sizeof($mergedArr) > 10){
+			$len = 10;
+		}else {
+			$len = sizeof($mergedArr);
+		}
+		$topCities = [];
+		for($i = 0; $i < $len; $i++){
+			array_push($topCities, $mergedArr[$i]);
+		}
+		return $topCities;
+	}
+
+/*------Creates report for an overview of eCommerce. 
+Doesn't use get_analytics() because it has four metric and no dimension values.
+Gets analytics object from $e_overview in get_results. 
+Merges the data into one array.
+Returns array of data to $e_overview-----*/
+	function _get_e_overview($analytics) 
+	{
+	  $dateRange = new Google_Service_AnalyticsReporting_DateRange();
+	  $dateRange->setStartDate($_SESSION['startThisMonth']);
+	  $dateRange->setEndDate($_SESSION['endThisMonth']);
+
+	  $metric_values = [
+	  	["expression" => "ga:sessions", "alias" => "sessions"],
+	  	["expression" => "ga:transactions", "alias" => "transactions"],
+	  	["expression" => "ga:localTransactionRevenue", "alias" => "localTransactionRevenue"],
+	  	["expression" => "ga:itemQuantity", "alias" => "itemQuantity"],
+	  ];
+	  json_encode($metric_values);
+ 
+		$ordering = new Google_Service_AnalyticsReporting_OrderBy();
+		$ordering->setFieldName("ga:localTransactionRevenue");
+		$ordering->setOrderType("VALUE");   
+    $ordering->setSortOrder("DESCENDING");
+
+	  $request = new Google_Service_AnalyticsReporting_ReportRequest();
+	  $request->setViewId($_SESSION['companyId']);
+	  $request->setDateRanges($dateRange);
+	  $request->setOrderBys($ordering);
+	  $request->setMetrics(array($metric_values));
+
+	  $body = new Google_Service_AnalyticsReporting_GetReportsRequest();
+	  $body->setReportRequests( array( $request) );
+
+	  $gaResults = $analytics->reports->batchGet( $body );
+	  
+	  $mergedArr = [];
+	  foreach($gaResults->reports as $key){
+			$data = $key->data;
+			$rows = $data->rows;
+			foreach ($rows as $key) {
+				if($key->metrics[0]->values[1] === "0"){
+					$key->metrics[0]->values[1] = 1;
+				}
+				$mergedArr[] = [
+					'transactions' => $key->metrics[0]->values[1],
+					'revenue' => $key->metrics[0]->values[2],
+					'avgRevenue' => $key->metrics[0]->values[2]/$key->metrics[0]->values[1],
+					'quantity' => $key->metrics[0]->values[3],
+					'converts' => $key->metrics[0]->values[1]/$key->metrics[0]->values[0] * 100,
+				];
+	  	}	
+		}
+		return $mergedArr; 
+	}
+
+	function _get_ads($analytics) 
+	{
+	  $dateRange = new Google_Service_AnalyticsReporting_DateRange();
+	  $dateRange->setStartDate('2016-11-01');
+	  $dateRange->setEndDate('2016-11-30');
+
+	  $metric_values = [
+	  	["expression" => "ga:adClicks", "alias" => "adClicks"],
+	  	["expression" => "ga:impressions", "alias" => "impressions"],
+	  ];
+	  json_encode($metric_values);
+
+	  $dimensions = [
+	  	["name" => "ga:keyword"],
+	  	["name" => "ga:adGroup"],
+	  ];
+	  json_encode($dimensions);
+	  
+		$ordering = new Google_Service_AnalyticsReporting_OrderBy();
+		$ordering->setFieldName("ga:adClicks");
+		$ordering->setOrderType("VALUE");   
+    $ordering->setSortOrder("DESCENDING");
+
+	  $request = new Google_Service_AnalyticsReporting_ReportRequest();
+	  $request->setViewId($_SESSION['companyId']);
+	  $request->setDateRanges($dateRange);
+	  $request->setOrderBys($ordering);
+	  $request->setDimensions(array($dimensions));
+	  $request->setMetrics(array($metric_values));
+
+	  $body = new Google_Service_AnalyticsReporting_GetReportsRequest();
+	  $body->setReportRequests( array( $request) );
+
+	  $gaResults = $analytics->reports->batchGet( $body );
+
+		$mergedArr = [];
+	  foreach($gaResults->reports as $key){
+			$data = $key->data;
+			$rows = $data->rows;
+			$totalClicks = $data->totals[0]->values[0];
+			$totalImpressions = $data->totals[0]->values[1];
+			foreach ($rows as $key) {
+				$mergedArr[] = [
+					'keyword' => $key->dimensions[0],
+					'adGroup' => $key->dimensions[1],
+					'adClicks' => $key->metrics[0]->values[0],
+					'impressions' => $key->metrics[0]->values[1],
+				];
+	  	}	
+		}
+		if(sizeof($mergedArr) > 10){
+			$len = 10;
+		}else {
+			$len = sizeof($mergedArr);
+		}
+		$topAds = [];
+		for($i = 0; $i < $len; $i++){
+			array_push($topAds, $mergedArr[$i]);
+		}
+		$topAds['totals'] = ['totalClicks' => $totalClicks, 'totalImpressions' => $totalImpressions];
+		return $topAds;
+	}
+
 
 }
