@@ -566,7 +566,7 @@ echo'
 						    echo '
 						    <tr>
 						      <td class="font-weight-bold">Totalt</td>
-						      <td class="font-weight-bold text-right"">'.$totalChannels.'</td>
+						      <td class="font-weight-bold text-right"">'.number_format($totalChannels,0,',',' ').'</td>
 							  </tr>
 						  </tbody>
 						</table>
@@ -651,9 +651,9 @@ echo'
 						    <tr>
 						      <th scope="col">Sökord</th>
 									<th scope="col">Annonsgrupp</th>
-									<th scope="col">Klick</th>
-									<th scope="col">Visningar</th>
-									<th scope="col">Position</th>
+									<th scope="col" class="text-right">Klick</th>
+									<th scope="col" class="text-right">Visningar</th>
+									<th scope="col" class="text-right">Position</th>
 						    </tr>
 						  </thead>
 						  <tbody> ';	  
@@ -662,8 +662,8 @@ echo'
 										<tr>
 											<td>'.$key['adSearch'].'</td>
 								      <td>'.$key['adGroup'].'</td>
-								      <td class="text-right">'.$key['adClicks'].'</td>
-								      <td class="text-right">'.$key['adViews'].'</td>
+								      <td class="text-right">'.number_format($key['adClicks'],0,',',' ').'</td>
+								      <td class="text-right">'.number_format($key['adViews'],0,',',' ').'</td>
 								      <td class="text-right">'.$key['adPosition'].'</td>
 								    </tr>
 						  		';
@@ -684,11 +684,11 @@ echo'
 					<div class="row justify-content-center">
 					  <div class="col-2 square">
 					    <h2>Klick</h2>
-					    <h1 class="font-weight-bold">'.$totalAdClicks.'</h1>
+					    <h1 class="font-weight-bold">'.number_format($totalAdClicks,0,',',' ').'</h1>
 					  </div>
 					  <div class="col-2 square">
 					    <h2>Visningar</h2>
-					    <h1 class="font-weight-bold">'.$totalAdViews.'</h1>
+					    <h1 class="font-weight-bold">'.number_format($totalAdViews,0,',',' ').'</h1>
 					  </div>
 				  
 		  	    <div class="col-2 square">
@@ -697,7 +697,7 @@ echo'
 				    </div>
 				    <div class="col-2 square">
 				      <h2>Överst</h2>
-				      <h1 class="font-weight-bold">'.$totalAdTop.'%</h1>
+				      <h1 class="font-weight-bold">'.$totalAdTop.' %</h1>
 				    </div>
 				    
 				  </div>

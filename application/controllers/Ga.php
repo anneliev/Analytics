@@ -4,7 +4,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 require_once './vendor/autoload.php';
 
 class Ga extends CI_Controller {
-
 /*-----Loads form to choose Company and Month-----*/
 	public function index()
 	{
@@ -90,40 +89,43 @@ Calls the function to get the Google Analytics report-----*/
 	{
 		session_start();
 
-	/*Create the client object and set the authorization configuration from client_secrets.json*/
+	
 		$client = new Google_Client();
 		$client->setAuthConfig('/home/test/www3/client_secrets.json');
 		$client->setRedirectUri('https://test3.testserver.se/index.php/ga/oauth2callback');
 		$client->addScope(Google_Service_Analytics::ANALYTICS_READONLY);
 
 	/*Handle authorization flow from the server*/
-		if (! isset($_GET['code'])) {
+	
+		if (!isset($_GET['code'])) {
 		  $auth_url = $client->createAuthUrl();
 		  header('Location: ' . filter_var($auth_url, FILTER_SANITIZE_URL));
 		} else {
 		  $client->authenticate($_GET['code']);
 		  $_SESSION['access_token'] = $client->getAccessToken();
+
 		  $redirect_uri = 'https://test3.testserver.se';
 		  header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
 		/* If oauth2 doesn't work, use this link. Replace the client_id with the client_id from client_secrets.json*/
-		 // ****');
-		}
+		 
+		 }
+		
 	}
 /*-----Creates the Google client and when auhtorized, calls the functions to get the specific reports from Google Analytics and displays them in the view display_results-----*/
 	public function get_results()
 	{
-		
-		$client = new Google_Client();
-		$client->setAuthConfig('/home/test/www3/client_secrets.json');
-		$client->addScope(Google_Service_Analytics::ANALYTICS_READONLY);
-	
+		 $client = new Google_Client();
+		 $client->setAuthConfig('/home/test/www3/client_secrets.json');
+		 $client->addScope(Google_Service_Analytics::ANALYTICS_READONLY);
+		 $client->setAccessToken($_SESSION['access_token']);
 
 		/* If the user has already authorized this app then get an access token else redirect to ask the user to authorize access to Google Analytics */
+		
 		if (isset($_SESSION['access_token']) && $_SESSION['access_token']) {	
 		  try{
 			  $client->setAccessToken($_SESSION['access_token']);
 			  $analytics = new Google_Service_AnalyticsReporting($client);
-
+			
 			  $cityResults = $this->_get_cities($analytics);
 			  $pagePathResults = $this->_get_pageviews($analytics);
 			  $deviceCategory = $this->_get_devices($analytics);
@@ -137,8 +139,8 @@ Calls the function to get the Google Analytics report-----*/
 			  $e_deviceResults = $this->_get_e_devices($analytics);
 			  $e_cityResults = $this->_get_e_cities($analytics);
 			  $e_overview = $this->_get_e_overview($analytics);
-			  $get_ads = $this->_get_ads($analytics);
-
+			  $get_ads_analytics = $this->_get_ads_analytics($analytics, $_SESSION['startThisMonth'], $_SESSION['endThisMonth']);
+			
 			  $this->load->view('header.php');
 				$this->load->view('display_results', array(
 	 				'pagePaths' => $pagePathResults,
@@ -154,6 +156,7 @@ Calls the function to get the Google Analytics report-----*/
 	 				'e_devices' => $e_deviceResults,
 	 				'e_cities' => $e_cityResults,
 	 				'e_overview' => $e_overview,
+	 				'topAds' => $get_ads_analytics,
 	 				'companyName' => $_SESSION['companyName'],
 	 				'month' => $_SESSION['month'],
 	    	));
@@ -164,15 +167,16 @@ Calls the function to get the Google Analytics report-----*/
 				if((strpos($msg, 'invalid authentication credentials') !== false)){
 					header($auth_url);
 					/* If oauth2 doesn't work, use this link. Replace the client_id with the client_id from client_secrets.json*/
-					//***');
+					
+		 
 			  }else {
 			  	var_dump($e->getCode() .': '. $e->getMessage);
 			  }
 			}
 		} else {
 		  $redirect_uri = 'https://test3.testserver.se/index.php/ga/oauth2callback';
-		  header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
-		}
+		//  header('Location: ' . filter_var($redirect_uri, FILTER_SANITIZE_URL));
+		} 
 	}
 /*-----Checks if the user has checked checkboxes in display_results view. 
 If set, decodes the string and adds in the matching empty array or takes the value from input field and stores in arrays and variables. 
@@ -198,7 +202,7 @@ In the view file, checks if the array/variable is not empty and in that case pas
 		$e_commerce = [];
 		$e_cities = [];
 
-		if (isset($_POST['month-traffic-table'])) {
+		if(isset($_POST['month-traffic-table'])) {
 	    $postArr = str_replace("'", '"', $_POST['month-traffic-table']);
 	    $month_traffic = json_decode($postArr, true);
 	   
@@ -411,7 +415,10 @@ Returns the report to the function that made this call-----*/
 	  	$gaResults = $analytics->reports->batchGet( $body );
 	  	return $gaResults;
 	  }catch(Google_Exception $e){
-			header('***');
+			header('Location: **');
+	  	echo '<pre>';
+	  	var_dump($e);
+	  	echo '</pre>';
 		}
 	}
 
@@ -931,11 +938,16 @@ Returns array of data to $e_overview-----*/
 		return $mergedArr; 
 	}
 
-	function _get_ads($analytics) 
+/*------Creates report for top 5 AdWords. 
+Doesn't use get_analytics() because it has two metric and two dimension values.
+Gets analytics object from $get_ads_analytics in get_results. 
+Merges the data into one array.
+Returns array of data to $get_ads_analytics-----*/
+	function _get_ads_analytics($analytics, $startDate, $endDate) 
 	{
 	  $dateRange = new Google_Service_AnalyticsReporting_DateRange();
-	  $dateRange->setStartDate('2016-11-01');
-	  $dateRange->setEndDate('2016-11-30');
+	  $dateRange->setStartDate($startDate);
+	  $dateRange->setEndDate($endDate);
 
 	  $metric_values = [
 	  	["expression" => "ga:adClicks", "alias" => "adClicks"],
@@ -965,7 +977,6 @@ Returns array of data to $e_overview-----*/
 	  $body->setReportRequests( array( $request) );
 
 	  $gaResults = $analytics->reports->batchGet( $body );
-
 		$mergedArr = [];
 	  foreach($gaResults->reports as $key){
 			$data = $key->data;
@@ -982,7 +993,7 @@ Returns array of data to $e_overview-----*/
 	  	}	
 		}
 		if(sizeof($mergedArr) > 10){
-			$len = 10;
+			$len = 5;
 		}else {
 			$len = sizeof($mergedArr);
 		}
@@ -990,9 +1001,11 @@ Returns array of data to $e_overview-----*/
 		for($i = 0; $i < $len; $i++){
 			array_push($topAds, $mergedArr[$i]);
 		}
-		$topAds['totals'] = ['totalClicks' => $totalClicks, 'totalImpressions' => $totalImpressions];
+		if(!empty($totalClicks)){
+			$topAdsTotals = ['totalClicks' => $totalClicks, 'totalImpressions' => $totalImpressions];
+			array_unshift($topAds, $topAdsTotals);
+	  }
 		return $topAds;
 	}
-
 
 }

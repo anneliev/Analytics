@@ -750,7 +750,30 @@ echo'
 									      <th scope="col">Genomsnittlig position</th>
 									    </tr>
 									  </thead>
-									  <tbody> 
+									  <tbody> ';
+									  if(!empty($topAds[1])){
+									  	for ($i = 1; $i < sizeof($topAds); $i++) {
+									  		echo '
+									  		<tr>';
+									  		if(isset($topAds[$i]['keyword'])){
+									  		//	var_dump($topAds[$i]['keyword']);
+									  		//	var_dump($topAds[$i]);
+									  		//	var_dump($i);
+									  			echo'
+									  			<th scope="row">'.$i.'</th>
+													<td><input type="text" class="form-control" name="adword-search'.$i.'" value="'.$topAds[$i]['keyword'].'"/></td>
+									  			<td><input type="text" class="form-control" name="adword-group'.$i.'" value="'.$topAds[$i]['adGroup'].'"/></td>
+									  		  <td><input type="text" class="form-control" name="adword-click'.$i.'" value="'.$topAds[$i]['adClicks'].'"/></td>
+									  		  <td><input type="text" class="form-control" name="adword-views'.$i.'" value="'.$topAds[$i]['impressions'].'"/></td>
+									  			';
+									  		}
+									  		echo '
+									  		<td><input type="text" class="form-control" name="adword-position'.$i.'" /></td>
+									  	</tr>';
+									  	}
+
+									  }else{
+									  	echo '
 									  	<tr>
 									  		<th scope="row">1</th>
 									  		<td><input type="text" class="form-control" name="adword-search1" /></td>
@@ -790,7 +813,9 @@ echo'
 									  		<td><input type="text" class="form-control" name="adword-click5" /></td>
 									  		<td><input type="text" class="form-control" name="adword-views5" /></td>
 									  		<td><input type="text" class="form-control" name="adword-position5" /></td>
-									  	</tr> 
+									  	</tr> ';
+									  }
+									  echo '
 									  </tbody>
 									</table>
 								</div>
@@ -803,14 +828,32 @@ echo'
 							<div class="row justify-content-center">
 								<div class="col-2 card square-input">
 									<div class="card-body">	
-										<h3 class="card-title">Klick</h3>
-										<input type="text" class="form-control" name="adword-total-click" />
+										<h3 class="card-title">Klick</h3>';
+										if(!empty($topAds)){
+											echo '
+												<input type="text" class="form-control" name="adword-total-click" value="'.$topAds[0]['totalClicks'].'"/>
+											';
+										}else{
+											echo '
+											<input type="text" class="form-control" name="adword-total-click"/>
+											'; 
+										}
+										echo '									
 									</div>
 								</div>
 								<div class="col-2 card square-input">
 									<div class="card-body">	
-										<h3 class="card-title">Visningar</h3>
-										<input type="text" class="form-control" name="adword-total-views" />
+										<h3 class="card-title">Visningar</h3> ';
+										if(!empty($topAds)){
+											echo '
+										<input type="text" class="form-control" name="adword-total-views" value="'.$topAds[0]['totalImpressions'].'"/>
+										';
+										}else{
+											echo '
+											<input type="text" class="form-control" name="adword-total-views"/>
+											'; 
+										}
+										echo '			
 									</div>
 								</div>
 								<div class="col-2 card square-input">
